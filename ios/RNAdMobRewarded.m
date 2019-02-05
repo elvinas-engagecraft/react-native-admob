@@ -92,6 +92,10 @@ RCT_EXPORT_METHOD(isReady:(RCTResponseSenderBlock)callback)
   [self.bridge.eventDispatcher sendDeviceEventWithName:@"rewardedVideoDidClose" body:nil];
 }
 
+- (void)rewardBasedVideoAdDidComplete:(GADRewardBasedVideoAd *)rewardBasedVideoAd {
+  [self.bridge.eventDispatcher sendDeviceEventWithName:@"rewardedVideoDidComplete" body:nil];
+}
+
 - (void)rewardBasedVideoAdWillLeaveApplication:(GADRewardBasedVideoAd *)rewardBasedVideoAd {
   [self.bridge.eventDispatcher sendDeviceEventWithName:@"rewardedVideoWillLeaveApplication" body:nil];
 }

@@ -13,6 +13,7 @@ const eventHandlers = {
   rewardedVideoDidFailToLoad: new Map(),
   rewardedVideoDidOpen: new Map(),
   rewardedVideoDidClose: new Map(),
+  rewardedVideoDidComplete: new Map(),
   rewardedVideoWillLeaveApplication: new Map(),
 };
 
@@ -33,6 +34,9 @@ const addEventListener = (type, handler) => {
       eventHandlers[type].set(handler, DeviceEventEmitter.addListener(type, handler));
       break;
     case 'rewardedVideoDidClose':
+      eventHandlers[type].set(handler, DeviceEventEmitter.addListener(type, handler));
+      break;
+    case 'rewardedVideoDidComplete':
       eventHandlers[type].set(handler, DeviceEventEmitter.addListener(type, handler));
       break;
     case 'rewardedVideoWillLeaveApplication':
