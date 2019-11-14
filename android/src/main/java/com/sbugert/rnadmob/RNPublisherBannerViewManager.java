@@ -1,9 +1,7 @@
 package com.sbugert.rnadmob;
 
-import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.View;
 
 import com.facebook.react.bridge.Arguments;
