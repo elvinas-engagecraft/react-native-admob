@@ -1,7 +1,9 @@
 package com.sbugert.rnadmob;
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.View;
 
 import com.facebook.react.bridge.Arguments;
@@ -29,8 +31,6 @@ import java.util.Map;
 
 class ReactPublisherAdView extends ReactViewGroup implements AppEventListener {
 
-    protected PublisherAdView adView;
-
     String[] testDevices;
     AdSize[] validAdSizes;
     String adUnitID;
@@ -43,16 +43,20 @@ class ReactPublisherAdView extends ReactViewGroup implements AppEventListener {
     }
 
     private void createAdView() {
-        if (this.adView != null) this.adView.destroy();
+        addView(new PublisherAdView(getContext()));
+    }
 
-        final Context context = getContext();
-        this.adView = new PublisherAdView(context);
-        this.adView.setAppEventListener(this);
-        this.adView.setAdListener(new AdListener() {
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        PublisherAdView adView = (PublisherAdView) getChildAt(0);
+        adView.setAppEventListener(this);
+        adView.setAdListener(new AdListener() {
             @Override
             public void onAdLoaded() {
-                int width = adView.getAdSize().getWidthInPixels(context);
-                int height = adView.getAdSize().getHeightInPixels(context);
+                PublisherAdView adView = (PublisherAdView) getChildAt(0);
+                int width = adView.getAdSize().getWidthInPixels(adView.getContext());
+                int height = adView.getAdSize().getHeightInPixels(adView.getContext());
                 int left = adView.getLeft();
                 int top = adView.getTop();
                 adView.measure(width, height);
@@ -100,7 +104,16 @@ class ReactPublisherAdView extends ReactViewGroup implements AppEventListener {
                 sendEvent(RNPublisherBannerViewManager.EVENT_AD_LEFT_APPLICATION, null);
             }
         });
-        this.addView(this.adView);
+        adView.resume();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        PublisherAdView adView = (PublisherAdView) getChildAt(0);
+        adView.setAppEventListener(null);
+        adView.setAdListener(null);
+        adView.pause();
+        super.onDetachedFromWindow();
     }
 
     private void sendOnSizeChangeEvent() {
@@ -108,7 +121,7 @@ class ReactPublisherAdView extends ReactViewGroup implements AppEventListener {
         int height;
         ReactContext reactContext = (ReactContext) getContext();
         WritableMap event = Arguments.createMap();
-        AdSize adSize = this.adView.getAdSize();
+        AdSize adSize = ((PublisherAdView) getChildAt(0)).getAdSize();
         if (adSize == AdSize.SMART_BANNER) {
             width = (int) PixelUtil.toDIPFromPixel(adSize.getWidthInPixels(reactContext));
             height = (int) PixelUtil.toDIPFromPixel(adSize.getHeightInPixels(reactContext));
@@ -124,9 +137,9 @@ class ReactPublisherAdView extends ReactViewGroup implements AppEventListener {
     private void sendEvent(String name, @Nullable WritableMap event) {
         ReactContext reactContext = (ReactContext) getContext();
         reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
-                getId(),
-                name,
-                event);
+            getId(),
+            name,
+            event);
     }
 
     public void loadBanner() {
@@ -145,7 +158,7 @@ class ReactPublisherAdView extends ReactViewGroup implements AppEventListener {
         }
 
         AdSize[] adSizesArray = adSizes.toArray(new AdSize[adSizes.size()]);
-        this.adView.setAdSizes(adSizesArray);
+        ((PublisherAdView) getChildAt(0)).setAdSizes(adSizesArray);
 
         PublisherAdRequest.Builder adRequestBuilder = new PublisherAdRequest.Builder();
         if (testDevices != null) {
@@ -164,7 +177,12 @@ class ReactPublisherAdView extends ReactViewGroup implements AppEventListener {
             }
         }
         PublisherAdRequest adRequest = adRequestBuilder.build();
-        this.adView.loadAd(adRequest);
+        ((PublisherAdView) getChildAt(0)).loadAd(adRequest);
+    }
+
+    public void destroyBanner() {
+        PublisherAdView adView = (PublisherAdView) getChildAt(0);
+        adView.destroy();
     }
 
     public void setAdUnitID(String adUnitID) {
@@ -174,7 +192,7 @@ class ReactPublisherAdView extends ReactViewGroup implements AppEventListener {
             this.createAdView();
         }
         this.adUnitID = adUnitID;
-        this.adView.setAdUnitId(adUnitID);
+        ((PublisherAdView) getChildAt(0)).setAdUnitId(adUnitID);
     }
 
     public void setTestDevices(String[] testDevices) {
@@ -221,6 +239,7 @@ public class RNPublisherBannerViewManager extends ViewGroupManager<ReactPublishe
     public static final String EVENT_APP_EVENT = "onAppEvent";
 
     public static final int COMMAND_LOAD_BANNER = 1;
+    public static final int COMMAND_DESTROY_BANNER = 0;
 
     @Override
     public String getName() {
@@ -243,13 +262,13 @@ public class RNPublisherBannerViewManager extends ViewGroupManager<ReactPublishe
     public Map<String, Object> getExportedCustomDirectEventTypeConstants() {
         MapBuilder.Builder<String, Object> builder = MapBuilder.builder();
         String[] events = {
-                EVENT_SIZE_CHANGE,
-                EVENT_AD_LOADED,
-                EVENT_AD_FAILED_TO_LOAD,
-                EVENT_AD_OPENED,
-                EVENT_AD_CLOSED,
-                EVENT_AD_LEFT_APPLICATION,
-                EVENT_APP_EVENT
+            EVENT_SIZE_CHANGE,
+            EVENT_AD_LOADED,
+            EVENT_AD_FAILED_TO_LOAD,
+            EVENT_AD_OPENED,
+            EVENT_AD_CLOSED,
+            EVENT_AD_LEFT_APPLICATION,
+            EVENT_APP_EVENT
         };
         for (int i = 0; i < events.length; i++) {
             builder.put(events[i], MapBuilder.of("registrationName", events[i]));
@@ -322,7 +341,7 @@ public class RNPublisherBannerViewManager extends ViewGroupManager<ReactPublishe
     @Nullable
     @Override
     public Map<String, Integer> getCommandsMap() {
-        return MapBuilder.of("loadBanner", COMMAND_LOAD_BANNER);
+        return MapBuilder.of("loadBanner", COMMAND_LOAD_BANNER, "destroyBanner", COMMAND_DESTROY_BANNER);
     }
 
     @Override
@@ -330,6 +349,9 @@ public class RNPublisherBannerViewManager extends ViewGroupManager<ReactPublishe
         switch (commandId) {
             case COMMAND_LOAD_BANNER:
                 root.loadBanner();
+                break;
+            case COMMAND_DESTROY_BANNER:
+                root.destroyBanner();
                 break;
         }
     }
