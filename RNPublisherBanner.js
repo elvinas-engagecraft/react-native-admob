@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { requireNativeComponent, UIManager, findNodeHandle, ViewPropTypes } from 'react-native';
+import { Platform, requireNativeComponent, UIManager, findNodeHandle, ViewPropTypes } from 'react-native';
 import { string, func, arrayOf, object } from 'prop-types';
 
 import { createErrorFromErrorData } from './utils';
@@ -20,11 +20,13 @@ class PublisherBanner extends Component {
   }
 
   componentWillUnmount() {
-    UIManager.dispatchViewManagerCommand(
-      findNodeHandle(this._bannerView),
-      UIManager.RNDFPBannerView.Commands.destroyBanner,
-      null
-    );
+    if (Platform.OS == 'android') {
+      UIManager.dispatchViewManagerCommand(
+        findNodeHandle(this._bannerView),
+        UIManager.RNDFPBannerView.Commands.destroyBanner,
+        null
+      );
+    }
   }
 
   loadBanner() {
