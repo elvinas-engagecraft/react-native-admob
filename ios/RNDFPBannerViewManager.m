@@ -32,6 +32,11 @@ RCT_EXPORT_METHOD(loadBanner:(nonnull NSNumber *)reactTag)
     }];
 }
 
+RCT_EXPORT_METHOD(destroyBanner:(nonnull NSNumber *)reactTag)
+{
+    // a placeholder for Android counterpart
+}
+
 RCT_REMAP_VIEW_PROPERTY(adSize, _bannerView.adSize, GADAdSize)
 RCT_REMAP_VIEW_PROPERTY(adUnitID, _bannerView.adUnitID, NSString)
 RCT_EXPORT_VIEW_PROPERTY(validAdSizes, NSArray)
