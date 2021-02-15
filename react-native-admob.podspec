@@ -20,9 +20,10 @@ Pod::Spec.new do |s|
   # search paths, and we rely on consumers of this library to add
   # Google-Mobile-Ads-SDK as a direct dependency.
   s.weak_frameworks        = 'GoogleMobileAds'
-  s.pod_target_xcconfig    = {
-    'FRAMEWORK_SEARCH_PATHS' => '"$(PODS_ROOT)/Google-Mobile-Ads-SDK/Frameworks/**"',
-  }
+  #s.pod_target_xcconfig    = {
+  #  'FRAMEWORK_SEARCH_PATHS' => '"$(PODS_ROOT)/Google-Mobile-Ads-SDK/Frameworks/**"',
+  #}
+  s.dependency 'Google-Mobile-Ads-SDK'
 
   s.dependency 'React'
 end
